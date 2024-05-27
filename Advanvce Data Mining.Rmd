@@ -1,0 +1,148 @@
+---
+title: "ADVANCED DATA MINING AND PREDICTIVE ANALYTICS"
+author: "shiva gadila"
+date: "2023-10-21"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#Load the Required Libraries
+```{r}
+library(ISLR)
+library(dplyr)
+library(glmnet)
+library(caret)
+```
+
+# Load the Carseats Dataset and Data Preparation
+
+```{r}
+# Load the Carseats dataset
+attach(Carseats)
+```
+
+
+```{r}
+# Filter the required attributes, scale the data, and create a model for scaling
+Carseats_Filter <- Carseats %>% select("Price", "Advertising", "Population", "Age", "Income", "Education")
+scaling_model <- scale(Carseats_Filter)
+```
+
+
+```{r}
+# Split the data into training and testing sets (x_train, x_test, y_train, y_test)
+set.seed(123)  # Set a random seed for reproducibility
+sample_indices <- sample(1:nrow(Carseats_Filter), nrow(Carseats_Filter) * 0.7)
+x_train <- as.matrix(scaling_model[sample_indices, ])
+x_test <- as.matrix(scaling_model[-sample_indices, ])
+y_train <- Carseats$Sales[sample_indices]
+y_test <- Carseats$Sales[-sample_indices]
+```
+
+#lasso regression
+```{r}
+
+lasso_model <- glmnet(x_train, y_train, alpha = 1)
+cv_model <- cv.glmnet(x_train, y_train, alpha = 1)  
+best_lambda <- cv_model$lambda.min
+lasso_best_model <- glmnet(x_train, y_train, alpha = 1, lambda = best_lambda)
+```
+
+```{r}
+# Make predictions on the test data
+predictions <- predict(lasso_best_model, s = best_lambda, newx = x_test)
+actual_values <- y_test
+rsquared <- 1 - sum((actual_values - as.vector(predictions))^2) / sum((actual_values - mean(actual_values))^2)
+rsquared
+best_lambda
+
+```
+#Question 1 : Applying the Lasso Regression on the Dataset to check if it improved the R-squared value.
+```{r}
+fit <- glmnet(x_train, y_train)
+summary(fit)
+plot(fit)
+```
+
+
+```{r}
+# Lasso Regression with Cross-Validation
+fit_lasso <- cv.glmnet(x_train, y_train, alpha = 1)  # alpha = 1 for Lasso
+plot(fit_lasso)
+summary(fit_lasso)  
+print(fit_lasso)  # Print the cross-validated model
+```
+
+#Question 2 :  What is the coefficient for the price (normalized) attribute in the best model (i.e. modelwith the optimal lambda)?
+```{r}
+# Find the minimum Lambda value
+min_lambda <- fit_lasso$lambda.min
+min_lambda
+
+```
+
+```{r}
+# Coefficient for the equation using the minimum Lambda
+coef(fit_lasso, s = min_lambda)
+
+```
+
+```{r}
+# Get the coefficients for the optimal Lasso model (at lambda.min)
+coefficients_optimal_model <- coef(fit_lasso, s = min_lambda)
+
+# Extract the coefficient for the "Price" attribute (it's the second coefficient)
+price_coefficient <- coefficients_optimal_model[2]
+
+# Print the coefficient
+price_coefficient
+
+```
+
+#Question 3 How many attributes remain in the model if lambda is set to 0.01? How that number changes if lambda is increased to 0.1? Do you expect more variables to stay in the model (i.e., to have non-zero coefficients) as we increase lambda.
+
+```{r}
+# Find the coefficients for lambda = 0.01
+coefficients_lambda_0.01 <- coef(fit_lasso, s = 0.01)
+
+# Find the coefficients for lambda = 0.1
+coefficients_lambda_0.1 <- coef(fit_lasso, s = 0.1)
+
+num_non_zero_coefficients_lambda_0.01 <- sum(coefficients_lambda_0.01 != 0)
+num_non_zero_coefficients_lambda_0.1 <- sum(coefficients_lambda_0.1 != 0)
+
+#results
+num_non_zero_coefficients_lambda_0.01
+num_non_zero_coefficients_lambda_0.1
+
+```
+#Question 4 QB4. Build an elastic-net model with alpha set to 0.6. What is the best value of lambda for such a model?
+
+
+```{r}
+fit.elnet = glmnet(x_train,y_train, alpha = 0.6)
+plot(fit.elnet, xvar = "lambda")
+```
+
+```{r}
+# Elastic-Net Model with Cross-Validation (alpha = 0.6)
+fit_elnet <- cv.glmnet(x_train, y_train, alpha = 0.6)
+plot(fit_elnet) 
+summary(fit_elnet)  
+print(fit_elnet)  
+
+
+```
+
+```{r}
+# Find the minimum Lambda value for the elastic-net model
+min_lambda_elnet <- fit_elnet$lambda.min
+min_lambda_elnet
+
+```
+
+#The best value of lambda for such a model is 0.006291819

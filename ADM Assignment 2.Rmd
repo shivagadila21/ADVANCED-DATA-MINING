@@ -1,0 +1,179 @@
+---
+title: "Assignment 2"
+author: "shiva gadila"
+date: "2023-11-11"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+QA1. What is the key idea behind bagging? Can bagging deal both with high variance(overfitting) and high bias (underfitting)? 
+
+ANSWER:- Bagging aims to reduce the variance (overfitting) of a machine-learning model. The core concept involves training multiple models on different random subsets  of the dataset. This diversity in training data helps the models capture different aspects of the underlying patterns in the data. In regression or classification tasks, the models are merged by calculating their average (for regression) or through a majority vote (for classification). This process helps in mitigating errors introduced by each individual model, leading to a reduction in the final prediction's variability.
+Bagging is particularly effective in addressing high variance (overfitting) by mitigating the impact of outliers and noise in individual models. However, it may not directly deal with high bias (underfitting). To achieve a balanced model, ensemble methods like bagging work well when combined with diverse models. By incorporating different perspectives from various models, the ensemble can often strike a better balance between bias and variance.   
+Bagging reduces variance but may not directly handle high bias; combining it with boosting, which emphasizes misclassified instances, forms a potent strategy for addressing both high variance and high bias in machine learning models.
+
+
+QA2. Why bagging models are computationally more efficient when compared to boosting models with the same number of weak learners?
+
+ANSWER:- Bagging models demonstrate enhanced computational efficiency due to their ability to train weak learners independently in parallel. Each learner works on a random subset of the data, allowing them to be trained in isolation. This parallelization significantly speeds up the training process compared to the sequential training required by boosting models.
+
+In bagging, the training of each weak learner is like a simultaneous, independent expedition into the data landscape. This parallel approach contrasts with boosting, where the training journey is more like a relay race. Boosting's sequential training method means each runner (weak learner) relies on the insights handed over by the previous one, limiting the speed of the entire process.
+
+Moreover, boosting models often demand more rounds of refinement to reach their optimal solution, amplifying the computational load. In essence, while bagging models efficiently explore the data world in parallel, boosting models engage in a sequential relay, making bagging computationally more effective, especially when considering both parallelization and iteration aspects.
+
+
+QA3. James is thinking of creating an ensemble mode to predict whether a given stock will go up or down in the next week. He has trained several decision tree models but each model is not performing any better than a random model. The models are also very similar to each other. Do you think creating an ensemble model by combining these tree models can boost the performance? Discuss your answer.
+
+ANSWER :-If James is facing a scenario where each individual decision tree model performs no better than a random model and the models are strikingly similar, the prospect of creating an ensemble model might not substantially improve performance.
+
+Ensemble models like bagging and boosting thrive on aggregating diverse weak models to construct a potent predictor. However, if the individual models are both subpar and remarkably alike, the resulting ensemble model may not deliver the desired performance boost. In such cases, it might be more effective to first focus on improving the individual decision tree models. This could involve tweaking hyperparameters, exploring alternative approaches, or acquiring more data for model training.
+
+Alternatively, James could consider a different ensemble method, like stacking, where the decision tree models' outputs serve as inputs for another model better suited for handling weak models. It's crucial to note that the success of any ensemble method hinges on the diversity and quality of the individual models it incorporates. Before diving into ensemble strategies, refining the foundation—the individual decision tree models—should be a priority.
+
+QA4. Consider the following Table that classifies some objects into two classes of edible (+) and
+non- edible (-), based on some characteristics such as the object color, size and shape. What
+would be the Information gain for splitting the dataset based on the “Size” attribute?
+
+```{r}
+# PARENT
+parent <- -((8/16) * log2(8/16) + (8/16) * log2(8/16))
+print(parent)
+```
+```{r}
+# SMALL
+small <- -((6/8) * log2(6/8) + (2/8) * log2(2/8))
+print(small)
+```
+
+```{r}
+# LARGE
+large <- -((3/8) * log2(3/8) + (5/8) * log2(5/8))
+print(large)
+
+```
+
+```{r}
+# Calculate the mean entropy for SMALL and LARGE
+values <- c(small, large)
+mean_entropy <- mean(values)
+print(mean_entropy)
+```
+
+```{r}
+
+# Calculate Information Gain
+info_gain <- parent - mean_entropy
+print(info_gain)
+
+```
+
+QA5. Why is it important that the m parameter (number of attributes available at each split) to be optimally set in random forest models? Discuss the implications of setting this parameter too small or too large 
+In random forest models, setting the m parameter, which determines the number of attributes available at each split, is crucial for optimal performance. Here's a discussion on the implications of setting this parameter too small or too large:
+
+Optimal Setting: The ideal value for the m parameter varies depending on the specific dataset and the problem being addressed. Finding the right balance is essential to ensure that the random forest model can effectively capture patterns and relationships in the data.
+
+Setting m Too Small: If the m parameter is set too low, it leads to a reduction in the diversity among individual decision trees in the forest. This similarity may result in a limited ability to capture the full range of patterns and relationships in the data. Consequently, the model is prone to significant bias or underfitting, leading to a decrease in overall predictive performance.
+
+Setting m Too Large: Conversely, if the m parameter is set too high, it encourages individual decision trees to be overly dissimilar. This diversity may lead to a forest that struggles to generalize well to new data, as the trees may become too specialized to the training set. This scenario increases the risk of overfitting, where the model performs well on the training data but fails to generalize effectively to unseen data.
+Finding the optimal setting for the m parameter is essential as it determines the delicate balance between diversity and similarity among decision trees in a random forest. This setting plays a direct role in shaping the model's capacity to generalize effectively and provide accurate predictions for new, unseen data.
+
+
+PART 2 
+```{r}
+# Loading required libraries
+library(ISLR)
+library(dplyr)
+library(glmnet)
+library(caret)
+library(rpart)
+library(rpart.plot)
+
+```
+##Question 1 . 
+Build a decision tree regression model to predict Sales based on all other attributes
+("Price", "Advertising", "Population", "Age", "Income" and "Education"). Which attribute is used
+at the top of the tree (the root node) for splitting? Hint: you can either plot () and text()
+functions or use the summary() function to see the decision tree rule
+```{r}
+#LOADING THE DATASET CARSEATS:
+Carseats_Filtered <- Carseats%>%select("Sales","Price","Advertising","Population","Age","Income","Education")
+```
+
+```{r}
+model_1 <- rpart(Sales~., data=Carseats_Filtered, method = 'anova')
+rpart.plot(model_1)
+summary(model_1)
+```
+##The price attribute is used as the root node for spitting as it has the highest value in value importance (using summary function) and also we can see the decision tree plot where the price attribute is the first root node.
+```{r}
+summary(model_1)
+```
+
+
+## Queston 2
+Consider the following input: Sales=9, Price=6.54, Population=124, Advertising=0, Age=76, Income= 110, Education=10
+What will be the estimated Sales for this record using the decision tree model?
+
+
+```{r}
+Sales <- c(9)
+Price <- c(6.54)
+Population <- c(124)
+Advertising <- c(0)
+Age <- c(76)
+Income <- c(110)
+Education <- c(10)
+Test <- data.frame(Sales,Price,Population,Advertising,Age,Income,Education)
+
+```
+Now that our test set is prepared for evaluation within our model, the next step involves forecasting sales based on the provided data.
+
+```{r}
+Pred_sales_2 <- predict(model_1, Test)
+Pred_sales_2
+
+```
+As per the prediction from our model using the predict function, the decision tree suggests that sales for this given record are estimated to be approximately 9.58625 units.
+
+## Question 3
+Use the caret function to train a random forest (method=’rf’) for the same dataset. Use the caret default settings. By default, caret will examine the “mtry” values of 2,4, and 6.Recall that mtry is the number of attributes available for splitting at each splitting node. Which mtry value gives the best performance? 
+
+```{r}
+set.seed(123)
+Model_forest_caret <- train(Sales~., data = Carseats_Filtered, method = 'rf')
+
+```
+
+```{r}
+summary(Model_forest_caret)
+print(Model_forest_caret)
+plot(Model_forest_caret)
+
+```
+#Since **2** mtry has the lowest RMSE, this value is the best fit for mtry.
+
+##QUESTION 4 
+
+Customize the search grid by checking the model’s performance for mtry values of 2, 3 and
+5 using 3 repeats of 5-fold cross validation. 
+
+ 
+```{r}
+
+control <- trainControl(method="repeatedcv", number=5, repeats=3, search="grid")
+tunegrid <- expand.grid(.mtry=c(2,3,5))
+rf_gridsearch <- train(Sales~., data=Carseats_Filtered, method="rf", tuneGrid=tunegrid,trControl=control)
+print(rf_gridsearch)
+# Create a plot to visualize the results of the grid search
+plot(rf_gridsearch)
+
+```
+
+
+ 
+
+
